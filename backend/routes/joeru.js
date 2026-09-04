@@ -35,6 +35,11 @@ function createJoeruRouter(service) {
     catch (err) { fail(res, err); }
   });
 
+  router.post('/sessions/:id/abort', async (req, res) => {
+    try { res.json({ aborted: await service.abort(req.params.id) }); }
+    catch (err) { fail(res, err); }
+  });
+
   router.post('/sessions/:id/messages', async (req, res) => {
     const text = String(req.body?.text || '').trim();
     if (!text) return res.status(400).json({ error: 'text is required' });

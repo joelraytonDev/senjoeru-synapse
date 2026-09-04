@@ -71,6 +71,14 @@ class JoeruService {
     return this.#request(`/session/${encodeURIComponent(sessionId)}/message${q}`);
   }
 
+  /** Stop a run that's in flight. Returns whatever OpenCode reports. */
+  abort(sessionId) {
+    return this.#request(`/session/${encodeURIComponent(sessionId)}/abort`, {
+      method: 'POST',
+      timeout: 5_000,
+    });
+  }
+
   /**
    * Send a prompt and wait for the reply. `agent` and `model` are optional —
    * omitting them lets OpenCode use its own defaults, which is what keeps the

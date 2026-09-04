@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import {
   Send, Bot, Loader2, PlugZap, Copy, Check,
   ChevronRight, Brain, Terminal, Plus, PanelLeftClose, PanelLeft, MessageSquare,
+  Square, Users,
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import Markdown from '@/components/Markdown'
@@ -148,11 +149,23 @@ export default function JoeruChat() {
   const [showList, setShowList] = useState(true)
   const [loadingHistory, setLoadingHistory] = useState(false)
 
+  // What the reply looks like *so far*. OpenCode's SSE event payloads aren't
+  // documented, so this polls the message instead of guessing at shapes that
+  // would break on an upgrade. At 1s against a model that takes 1-60s, the
+  // difference is invisible — and tool calls show up as they happen.
+  const [live, setLive] = useState<Turn | null>(null)
+
+  // Empty = let Joeru decide who handles it, which is the normal path. Naming a
+  // specialist skips his routing and asks that person directly.
+  const [agent, setAgent] = useState('')
+  const [team, setTeam] = useState<any[]>([])
+
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     api.joeruHealth().then(setHealth).catch(() => setHealth({ running: false }))
+    api.getTeam().then((r: any) => setTeam(r?.team || [])).catch(() => setTeam([]))
   }, [])
 
   async function refreshSessions() {
@@ -213,6 +226,33 @@ export default function JoeruChat() {
     return () => clearInterval(t)
   }, [sending])
 
+  // Poll the reply as it's built. Only the newest assistant message matters —
+  // anything earlier is already rendered in `turns`.
+  useEffect(() => {
+    if (!sending || !sessionId) return
+    let cancelled = false
+
+    const tick = async () => {
+      try {
+        const { messages } = await api.joeruMessages(sessionId)
+        if (cancelled) return
+        const last = [...(messages || [])].reverse()
+          .find((m: any) => m?.info?.role === 'assistant')
+        if (!last) return
+        const { text, tools, reasoning } = readParts(last.parts)
+        if (text || tools.length) setLive({ role: 'assistant', text, tools, reasoning })
+      } catch { /* transient — the next tick retries */ }
+    }
+
+    const t = setInterval(tick, 1000)
+    return () => { cancelled = true; clearInterval(t) }
+  }, [sending, sessionId])
+
+  async function stop() {
+    if (!sessionId) return
+    try { await api.joeruAbort(sessionId) } catch { /* already finished */ }
+  }
+
   function grow(el: HTMLTextAreaElement) {
     el.style.height = 'auto'
     el.style.height = `${Math.min(el.scrollHeight, 200)}px`
@@ -236,7 +276,7 @@ export default function JoeruChat() {
         setSessionId(id)
       }
 
-      const reply = await api.joeruSend(id!, text)
+      const reply = await api.joeruSend(id!, text, agent || undefined)
       const { text: replyText, tools, reasoning } = readParts(reply?.parts)
       setTurns(t => [...t, {
         role: 'assistant',
@@ -253,6 +293,7 @@ export default function JoeruChat() {
       }])
     } finally {
       setSending(false)
+      setLive(null)
       refreshSessions()
       inputRef.current?.focus()
     }
@@ -399,12 +440,44 @@ export default function JoeruChat() {
           {sending && (
             <div className="flex gap-3">
               <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500
-                              flex items-center justify-center shrink-0">
+                              flex items-center justify-center shrink-0 mt-0.5">
                 <Bot className="w-4 h-4 text-white" />
               </div>
-              <div className="flex items-center gap-2 text-sm text-gray-400 pt-1">
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                thinking… <span className="tabular-nums text-gray-600">{elapsed}s</span>
+              <div className="min-w-0 flex-1">
+                {live?.tools && live.tools.length > 0 && (
+                  <div className="mb-2 space-y-1">
+                    {live.tools.map((t, i) => (
+                      <div key={i} className="flex items-baseline gap-2 text-[11px]">
+                        <span className={`font-mono ${
+                          t.status === 'error' ? 'text-red-400'
+                            : t.status === 'completed' ? 'text-sky-300' : 'text-amber-300'
+                        }`}>{t.tool}</span>
+                        {t.summary && <span className="text-gray-600 truncate">{t.summary}</span>}
+                        {t.status === 'running' && (
+                          <Loader2 className="w-2.5 h-2.5 animate-spin text-amber-400" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {live?.text
+                  ? <Markdown>{live.text}</Markdown>
+                  : (
+                    <div className="flex items-center gap-2 text-sm text-gray-400 pt-1">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> thinking…
+                    </div>
+                  )}
+
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-[10px] text-gray-600 tabular-nums">{elapsed}s</span>
+                  <button onClick={stop}
+                    className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md
+                               bg-white/5 border border-white/10 text-gray-400
+                               hover:text-gray-200 hover:border-white/20 transition-colors">
+                    <Square className="w-2.5 h-2.5" /> stop
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -438,9 +511,29 @@ export default function JoeruChat() {
               <Send className="w-4 h-4" />
             </button>
           </div>
-          <p className="max-w-3xl mx-auto mt-1.5 text-[10px] text-gray-700 px-1">
-            Enter to send · Shift+Enter for a new line
-          </p>
+          <div className="max-w-3xl mx-auto mt-2 flex items-center gap-2 px-1">
+            {team.length > 0 && (
+              <label className="flex items-center gap-1.5 text-[11px] text-gray-600">
+                <Users className="w-3 h-3" />
+                <select
+                  value={agent}
+                  onChange={e => setAgent(e.target.value)}
+                  className="bg-transparent text-gray-400 focus:outline-none cursor-pointer
+                             hover:text-gray-200 transition-colors"
+                >
+                  <option value="" className="bg-gray-900">Joeru decides</option>
+                  {team.map((m: any) => (
+                    <option key={m.slug} value={m.slug} className="bg-gray-900">
+                      {m.displayName || m.slug}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            <span className="ml-auto text-[10px] text-gray-700">
+              Enter to send · Shift+Enter for a new line
+            </span>
+          </div>
         </div>
       </div>
     </div>

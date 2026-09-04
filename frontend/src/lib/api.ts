@@ -137,12 +137,15 @@ export const api = {
   async joeruMessages(sessionId: string): Promise<any> {
     return (await axios.get(`${API_BASE_URL}/joeru/sessions/${encodeURIComponent(sessionId)}/messages`)).data
   },
-  async joeruSend(sessionId: string, text: string): Promise<any> {
+  async joeruAbort(sessionId: string): Promise<any> {
+    return (await axios.post(`${API_BASE_URL}/joeru/sessions/${encodeURIComponent(sessionId)}/abort`)).data
+  },
+  async joeruSend(sessionId: string, text: string, agent?: string): Promise<any> {
     // No axios timeout: a free-tier reply can take minutes, and the backend
     // already bounds it.
     return (await axios.post(
       `${API_BASE_URL}/joeru/sessions/${encodeURIComponent(sessionId)}/messages`,
-      { text },
+      { text, agent },
       { timeout: 0 },
     )).data
   },
