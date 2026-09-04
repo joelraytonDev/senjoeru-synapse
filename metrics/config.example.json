@@ -1,0 +1,42 @@
+{
+  "_comment": "Copy this to config.json and edit for your workspace. Every field is optional — delete what you don't need. claudeDir defaults to <home>/.claude; repos auto-detect from active Claude sessions; colors are derived from names when unset.",
+  "claudeDir": null,
+
+  "_opencode": "Where OpenCode keeps its data, and the headless server the Joeru chat talks to. Leave null unless yours are elsewhere. Port 4097 rather than OpenCode's default 4096, which collides with the Kilo Code VS Code extension.",
+  "opencodeDir": null,
+  "opencodeServerUrl": null,
+
+  "_joeruKit": "Path to a joeru-kit checkout — the Memory tab reads and writes the markdown there. Defaults to a sibling directory of this repo. Leave null if you don't use it; the Memory tab then says so instead of failing.",
+  "joeruKitDir": null,
+
+  "pollInterval": 5,
+  "monitorClaudeDir": true,
+  "workspace": {
+    "name": "My Workspace",
+    "root": "C:\\path\\to\\your\\workspace",
+    "emoji": "🧠"
+  },
+  "repositories": [
+    "C:\\path\\to\\your\\workspace\\my-api",
+    "C:\\path\\to\\your\\workspace\\my-web"
+  ],
+  "repoAgents": {
+    "my-api": ["backend-engineer"],
+    "my-web": ["frontend-engineer"]
+  },
+  "agentRoles": {
+    "backend-engineer": { "displayName": "Backend Engineer", "color": "#f97316" }
+  },
+  "pricing": {
+    "modelLabel": "Sonnet 4.6",
+    "input": 3.0,
+    "output": 15.0,
+    "cacheRead": 0.3,
+    "cacheWrite": 3.75
+  },
+  "locale": "en-US",
+  "autoRefresh": true,
+  "notifications": false,
+  "hourlyBudget": 5,
+  "weeklyBudget": 50
+}
