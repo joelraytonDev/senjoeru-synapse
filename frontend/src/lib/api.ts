@@ -128,6 +128,17 @@ export const api = {
   async joeruHealth(): Promise<any> {
     return (await axios.get(`${API_BASE_URL}/joeru/health`)).data
   },
+  // Memory is local markdown in joeru-kit — read/write, but spends no tokens.
+  async joeruMemory(): Promise<any> {
+    return (await axios.get(`${API_BASE_URL}/joeru/memory`)).data
+  },
+  async joeruSaveMemory(folder: string, slug: string, data: { description?: string; body: string }): Promise<any> {
+    return (await axios.put(`${API_BASE_URL}/joeru/memory/${folder}/${encodeURIComponent(slug)}`, data)).data
+  },
+  async joeruDeleteMemory(folder: string, slug: string): Promise<any> {
+    return (await axios.delete(`${API_BASE_URL}/joeru/memory/${folder}/${encodeURIComponent(slug)}`)).data
+  },
+
   async joeruSessions(): Promise<any> {
     return (await axios.get(`${API_BASE_URL}/joeru/sessions`)).data
   },

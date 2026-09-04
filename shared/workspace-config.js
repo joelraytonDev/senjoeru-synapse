@@ -79,6 +79,16 @@ function resolveOpencodeDir(raw) {
   return path.join(os.homedir(), '.local', 'share', 'opencode');
 }
 
+// joeru-kit — the portable roster + memory the assistant reads and writes.
+// Defaults to a sibling of this repo, which is the usual layout, so nothing
+// needs configuring until it lives somewhere else.
+function resolveJoeruKitDir(raw) {
+  const v = raw && typeof raw.joeruKitDir === 'string' ? raw.joeruKitDir.trim() : '';
+  if (v) return v;
+  if (process.env.SYNAPSE_JOERU_KIT) return process.env.SYNAPSE_JOERU_KIT;
+  return path.resolve(__dirname, '..', '..', 'joeru-kit');
+}
+
 // `opencode serve` — the headless server the chat talks to. Separate from the
 // storage dir above: reading past sessions needs only the files on disk, but
 // holding a conversation needs a live process. Either can exist without the
@@ -97,6 +107,7 @@ function getConfig() {
   const raw = readRawConfig();
   const claudeDir = resolveClaudeDir(raw);
   const opencodeDir = resolveOpencodeDir(raw);
+  const joeruKitDir = resolveJoeruKitDir(raw);
 
   const w = raw.workspace || {};
   const wsName = w.name || 'Workspace';
@@ -154,6 +165,8 @@ function getConfig() {
       tasksFile: path.join(claudeDir, 'tasks.json'),
       opencodeDir,
       opencodeStorageDir: path.join(opencodeDir, 'storage'),
+      joeruKitDir,
+      memoryDir: path.join(joeruKitDir, 'memory'),
     },
     opencodeServerUrl: resolveOpencodeServerUrl(raw),
     workspace,

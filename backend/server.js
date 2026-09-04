@@ -53,6 +53,7 @@ const { createInsightsRouter } = require('./routes/insights');
 const { AttentionService } = require('./services/attention-service');
 const { createAttentionRouter } = require('./routes/attention');
 const { JoeruService } = require('./services/joeru-service');
+const { MemoryService } = require('./services/memory-service');
 const { createJoeruRouter } = require('./routes/joeru');
 
 const app = express();
@@ -264,6 +265,7 @@ if (teamService) app.use('/api/team', createTeamRouter(teamService));
 // "not running" rather than 404ing when `opencode serve` is down.
 app.use('/api/joeru', createJoeruRouter(
   new JoeruService({ baseUrl: getWorkspaceConfig().opencodeServerUrl }),
+  new MemoryService({ memoryDir: getWorkspaceConfig().paths.memoryDir }),
 ));
 if (notesService) app.use('/api/notes', createNotesRouter(notesService));
 if (bookmarkService) app.use('/api/bookmarks', createBookmarksRouter(bookmarkService));

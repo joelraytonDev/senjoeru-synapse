@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { Bot, MessageSquare, Activity } from 'lucide-react'
+import { Bot, MessageSquare, Activity, Brain } from 'lucide-react'
 import JoeruChat from './JoeruChat'
 import JoeruActivity from './JoeruActivity'
+import JoeruMemory from './JoeruMemory'
 
 const TABS = [
   { key: 'chat', label: 'Chat', icon: MessageSquare },
+  { key: 'memory', label: 'Memory', icon: Brain },
   { key: 'activity', label: 'Activity', icon: Activity },
 ] as const
 
@@ -23,8 +25,8 @@ export default function Joeru() {
             <Bot className="w-6 h-6" /> Joeru
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {tab === 'chat'
-              ? 'Your engineering assistant — he manages the team'
+            {tab === 'chat' ? 'Your engineering assistant — he manages the team'
+              : tab === 'memory' ? 'What he remembers — edit or delete anything here'
               : 'OpenCode sessions, delegations, and tool activity'}
           </p>
         </div>
@@ -52,6 +54,7 @@ export default function Joeru() {
         conversation — switching tabs must not destroy state.
       */}
       <div className={tab === 'chat' ? '' : 'hidden'}><JoeruChat /></div>
+      <div className={tab === 'memory' ? '' : 'hidden'}><JoeruMemory /></div>
       <div className={tab === 'activity' ? '' : 'hidden'}><JoeruActivity /></div>
     </div>
   )

@@ -10,11 +10,39 @@
  */
 const express = require('express');
 
-/** @param {import('../services/joeru-service').JoeruService} service */
-function createJoeruRouter(service) {
+/**
+ * @param {import('../services/joeru-service').JoeruService} service
+ * @param {import('../services/memory-service').MemoryService} [memory]
+ */
+function createJoeruRouter(service, memory) {
   const router = express.Router();
 
   const fail = (res, err) => res.status(502).json({ error: err.message });
+
+  // Memory is local files, not the model — these are read/write but spend
+  // nothing.
+  if (memory) {
+    router.get('/memory', (_req, res) => {
+      try { res.json(memory.list()); }
+      catch (err) { res.status(500).json({ error: err.message }); }
+    });
+
+    router.put('/memory/:folder/:slug', (req, res) => {
+      try {
+        res.json(memory.save(req.params.folder, req.params.slug, {
+          description: req.body?.description,
+          body: req.body?.body,
+        }));
+      } catch (err) {
+        res.status(400).json({ error: err.message });
+      }
+    });
+
+    router.delete('/memory/:folder/:slug', (req, res) => {
+      try { res.json(memory.remove(req.params.folder, req.params.slug)); }
+      catch (err) { res.status(400).json({ error: err.message }); }
+    });
+  }
 
   router.get('/health', async (_req, res) => {
     res.json(await service.health());
