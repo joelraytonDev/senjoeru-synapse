@@ -79,6 +79,19 @@ function resolveOpencodeDir(raw) {
   return path.join(os.homedir(), '.local', 'share', 'opencode');
 }
 
+// `opencode serve` — the headless server the chat talks to. Separate from the
+// storage dir above: reading past sessions needs only the files on disk, but
+// holding a conversation needs a live process. Either can exist without the
+// other, so they are configured independently.
+function resolveOpencodeServerUrl(raw) {
+  const v = raw && typeof raw.opencodeServerUrl === 'string' ? raw.opencodeServerUrl.trim() : '';
+  if (v) return v.replace(/\/$/, '');
+  if (process.env.SYNAPSE_OPENCODE_URL) return process.env.SYNAPSE_OPENCODE_URL.replace(/\/$/, '');
+  // 4097, not OpenCode's default 4096 — the Kilo Code VS Code extension listens
+  // on 4096, so the default collides on any machine that has it installed.
+  return 'http://127.0.0.1:4097';
+}
+
 /** Resolved, defaulted view of the workspace config. */
 function getConfig() {
   const raw = readRawConfig();
@@ -142,6 +155,7 @@ function getConfig() {
       opencodeDir,
       opencodeStorageDir: path.join(opencodeDir, 'storage'),
     },
+    opencodeServerUrl: resolveOpencodeServerUrl(raw),
     workspace,
     repoPaths,
     repoAgents,

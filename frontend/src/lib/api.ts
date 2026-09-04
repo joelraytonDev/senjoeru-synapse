@@ -122,4 +122,28 @@ export const api = {
   async getAgentActivity(limit = 200): Promise<any> {
     return (await axios.get(`${API_BASE_URL}/observation/agent-activity?limit=${limit}`)).data
   },
+
+  // ── Joeru chat (proxied to `opencode serve`) ────────────────────────────
+  // The only token-spending calls in this client.
+  async joeruHealth(): Promise<any> {
+    return (await axios.get(`${API_BASE_URL}/joeru/health`)).data
+  },
+  async joeruSessions(): Promise<any> {
+    return (await axios.get(`${API_BASE_URL}/joeru/sessions`)).data
+  },
+  async joeruCreateSession(title?: string): Promise<any> {
+    return (await axios.post(`${API_BASE_URL}/joeru/sessions`, { title })).data
+  },
+  async joeruMessages(sessionId: string): Promise<any> {
+    return (await axios.get(`${API_BASE_URL}/joeru/sessions/${encodeURIComponent(sessionId)}/messages`)).data
+  },
+  async joeruSend(sessionId: string, text: string): Promise<any> {
+    // No axios timeout: a free-tier reply can take minutes, and the backend
+    // already bounds it.
+    return (await axios.post(
+      `${API_BASE_URL}/joeru/sessions/${encodeURIComponent(sessionId)}/messages`,
+      { text },
+      { timeout: 0 },
+    )).data
+  },
 }
