@@ -79,6 +79,17 @@ function resolveOpencodeDir(raw) {
   return path.join(os.homedir(), '.local', 'share', 'opencode');
 }
 
+// The task board is Synapse's own format, not Claude Code's — Claude has no
+// native concept of one. It sits under ~/.claude only because that is where the
+// agents writing it were first told to look, so the path is configurable and
+// not tied to any runner. Default unchanged, so existing boards keep working.
+function resolveTasksFile(raw, claudeDir) {
+  const v = raw && typeof raw.tasksFile === 'string' ? raw.tasksFile.trim() : '';
+  if (v) return v;
+  if (process.env.SYNAPSE_TASKS_FILE) return process.env.SYNAPSE_TASKS_FILE;
+  return path.join(claudeDir, 'tasks.json');
+}
+
 // joeru-kit — the portable roster + memory the assistant reads and writes.
 // Defaults to a sibling of this repo, which is the usual layout, so nothing
 // needs configuring until it lives somewhere else.
@@ -162,7 +173,7 @@ function getConfig() {
       projectsDir: path.join(claudeDir, 'projects'),
       sessionsDir: path.join(claudeDir, 'sessions'),
       agentsDir: path.join(claudeDir, 'agents'),
-      tasksFile: path.join(claudeDir, 'tasks.json'),
+      tasksFile: resolveTasksFile(raw, claudeDir),
       opencodeDir,
       opencodeStorageDir: path.join(opencodeDir, 'storage'),
       joeruKitDir,
