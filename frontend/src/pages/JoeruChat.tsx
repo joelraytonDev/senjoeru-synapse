@@ -155,9 +155,10 @@ export default function JoeruChat() {
   // difference is invisible — and tool calls show up as they happen.
   const [live, setLive] = useState<Turn | null>(null)
 
-  // Empty = let Joeru decide who handles it, which is the normal path. Naming a
-  // specialist skips his routing and asks that person directly.
-  const [agent, setAgent] = useState('')
+  // Default to Joeru himself. Sending no agent gets OpenCode's generic `build`
+  // agent, which has no persona and no team — the chat would answer as a plain
+  // coding assistant rather than as Joeru.
+  const [agent, setAgent] = useState('joeru')
   const [team, setTeam] = useState<any[]>([])
 
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -521,10 +522,10 @@ export default function JoeruChat() {
                   className="bg-transparent text-gray-400 focus:outline-none cursor-pointer
                              hover:text-gray-200 transition-colors"
                 >
-                  <option value="" className="bg-gray-900">Joeru decides</option>
                   {team.map((m: any) => (
                     <option key={m.slug} value={m.slug} className="bg-gray-900">
                       {m.displayName || m.slug}
+                      {m.slug === 'joeru' ? ' (routes to the team)' : ''}
                     </option>
                   ))}
                 </select>
