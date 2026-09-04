@@ -156,6 +156,34 @@ function getConfig() {
 
   const agentRoles = raw.agentRoles && typeof raw.agentRoles === 'object' ? raw.agentRoles : {};
 
+  // Projects group repos so the graph can say "these are my projects" rather
+  // than implying one of them owns everything. Optional: with none declared,
+  // derive a single project named after the workspace holding every repo,
+  // which is exactly the old single-root behaviour.
+  const declaredProjects = Array.isArray(raw.projects) ? raw.projects : [];
+  const projects = declaredProjects.length
+    ? declaredProjects
+        .filter((p) => p && typeof p === 'object' && p.name)
+        .map((p) => ({
+          name: p.name,
+          emoji: p.emoji || '',
+          root: p.root || '',
+          repositories: Array.isArray(p.repositories) ? p.repositories : [],
+        }))
+    : [{
+        name: wsName,
+        emoji: w.emoji || '',
+        root: w.root || '',
+        repositories: repoPaths.map(basename),
+      }];
+
+  // A repo named by no project still has to appear somewhere, so it falls to
+  // the first — silently dropping it from the graph would be worse than
+  // filing it imperfectly.
+  const claimed = new Set(projects.flatMap((p) => p.repositories));
+  const unclaimed = repoPaths.map(basename).filter((r) => !claimed.has(r));
+  if (unclaimed.length && projects.length) projects[0].repositories.push(...unclaimed);
+
   const pm = { ...DEFAULT_PRICING, ...(raw.pricing || {}) };
   const pricing = {
     modelLabel: pm.modelLabel,
@@ -184,6 +212,7 @@ function getConfig() {
     },
     opencodeServerUrl: resolveOpencodeServerUrl(raw),
     workspace,
+    projects,
     repoPaths,
     repoAgents,
     agentRoles,

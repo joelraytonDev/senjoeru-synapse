@@ -178,3 +178,51 @@ test('degrades to a root-only-ish graph on empty input, never throws', async () 
   assert.ok(graph.nodes.find(n => n.type === 'root'));
   assert.equal(graph.nodes.filter(n => n.type === 'agent').length, 0);
 });
+
+/* ── projects tier ─────────────────────────────────────────────────── */
+
+test('repos are contained by their project, and agents still own them', async () => {
+  const graph = await buildGraph({ agentsData: AGENTS, tasksData: { tasks: [] } });
+
+  const projects = graph.nodes.filter(n => n.type === 'project');
+  assert.ok(projects.length >= 1, 'expected at least one project node');
+
+  // Every repo belongs to exactly one project, via a containment edge.
+  for (const repo of graph.nodes.filter(n => n.type === 'repo')) {
+    const containment = graph.edges.filter(
+      e => e.target === repo.id && e.data && e.data.containment,
+    );
+    assert.equal(containment.length, 1, `${repo.data.label} needs exactly one project`);
+    assert.equal(containment[0].source, repo.data.project);
+  }
+
+  // Containment must not have replaced ownership: an agent that owns a repo
+  // still has its own edge to it. Agents span projects, so the two are
+  // different relationships and both have to survive.
+  const owned = graph.nodes.find(n => n.type === 'repo' && (n.data.owners || []).length);
+  if (owned) {
+    const ownership = graph.edges.filter(
+      e => e.target === owned.id && !(e.data && e.data.containment),
+    );
+    assert.ok(ownership.length >= 1, `${owned.data.label} lost its owning-agent edge`);
+  }
+});
+
+test('every project node is laid out clear of its neighbours', async () => {
+  const graph = await buildLaidOutGraph({ agentsData: AGENTS, tasksData: { tasks: [] } });
+  const projects = graph.nodes.filter(n => n.type === 'project');
+
+  for (const p of projects) assert.equal(typeof p.position.x, 'number');
+
+  const xs = projects.map(p => p.position.x).sort((a, b) => a - b);
+  for (let i = 1; i < xs.length; i++) {
+    assert.ok(xs[i] - xs[i - 1] > 0, 'two projects share a column');
+  }
+
+  // Repos sit below their project, never above it.
+  const byId = Object.fromEntries(projects.map(p => [p.id, p]));
+  for (const repo of graph.nodes.filter(n => n.type === 'repo' && n.data.project)) {
+    assert.ok(repo.position.y > byId[repo.data.project].position.y,
+      `${repo.data.label} is not below its project`);
+  }
+});
