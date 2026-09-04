@@ -9,7 +9,7 @@
   "_joeruKit": "Path to a joeru-kit checkout — the Memory tab reads and writes the markdown there. Defaults to a sibling directory of this repo. Leave null if you don't use it; the Memory tab then says so instead of failing.",
   "joeruKitDir": null,
 
-  "_tasksFile": "The task board your agents write. This is Synapse's own format, not Claude Code's — Claude has no native task board. Defaults to <claudeDir>/tasks.json, which is only where it lives by history. Move it anywhere you like, but tell your agents the new path too, or they will keep writing the old one.",
+  "_tasksFile": "The task board your agents write. This is Synapse's own format, not Claude Code's — Claude has no native task board. Defaults to <repo>/data/tasks.json, gitignored, alongside the SQLite database. Point it elsewhere if you like, but tell your agents the new path too, or they will keep writing the old one and the board will silently freeze.",
   "tasksFile": null,
 
   "pollInterval": 5,

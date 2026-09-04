@@ -19,7 +19,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const CONFIG_PATH = path.join(__dirname, '..', 'metrics', 'config.json');
+const REPO_ROOT = path.join(__dirname, '..');
+const CONFIG_PATH = path.join(REPO_ROOT, 'metrics', 'config.json');
 
 // Pricing per MILLION tokens (config units); Claude Sonnet 4.6 defaults.
 const DEFAULT_PRICING = { modelLabel: 'Sonnet 4.6', input: 3.0, output: 15.0, cacheRead: 0.3, cacheWrite: 3.75 };
@@ -80,14 +81,16 @@ function resolveOpencodeDir(raw) {
 }
 
 // The task board is Synapse's own format, not Claude Code's — Claude has no
-// native concept of one. It sits under ~/.claude only because that is where the
-// agents writing it were first told to look, so the path is configurable and
-// not tied to any runner. Default unchanged, so existing boards keep working.
-function resolveTasksFile(raw, claudeDir) {
+// native concept of one. It used to default to ~/.claude/tasks.json, which put
+// Synapse's data inside another tool's directory purely because that is where
+// the agents writing it were first told to look. It now defaults beside the
+// SQLite database instead: data/ is this app's own store, gitignored, and the
+// agents are pointed at it by joeru-kit.
+function resolveTasksFile(raw) {
   const v = raw && typeof raw.tasksFile === 'string' ? raw.tasksFile.trim() : '';
   if (v) return v;
   if (process.env.SYNAPSE_TASKS_FILE) return process.env.SYNAPSE_TASKS_FILE;
-  return path.join(claudeDir, 'tasks.json');
+  return path.join(REPO_ROOT, 'data', 'tasks.json');
 }
 
 // joeru-kit — the portable roster + memory the assistant reads and writes.
@@ -173,7 +176,7 @@ function getConfig() {
       projectsDir: path.join(claudeDir, 'projects'),
       sessionsDir: path.join(claudeDir, 'sessions'),
       agentsDir: path.join(claudeDir, 'agents'),
-      tasksFile: resolveTasksFile(raw, claudeDir),
+      tasksFile: resolveTasksFile(raw),
       opencodeDir,
       opencodeStorageDir: path.join(opencodeDir, 'storage'),
       joeruKitDir,

@@ -343,7 +343,10 @@ function deriveProgress(body) {
   return 50;
 }
 
-const CLAUDE_TASKS_FILE = path.join(CLAUDE_DIR, 'tasks.json');
+// The board is Synapse's own file, not Claude's — follow config rather than
+// assuming it sits under the Claude directory. Hardcoding this meant the
+// watcher kept polling the old location after the path became configurable.
+const CLAUDE_TASKS_FILE = _cfg.paths.tasksFile;
 
 // Valid JSON string escapes. Agents occasionally paste code (e.g. PHP `$queue`
 // as `\$queue`) into task notes, producing invalid escapes that break the whole
