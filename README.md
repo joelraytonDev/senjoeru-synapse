@@ -25,6 +25,20 @@ A desktop AI Agent Operations Center designed to monitor, visualize, and coordin
 
 ## Getting Started
 
+### Let your agent do it
+
+This repo ships an `AGENTS.md` that Claude Code and OpenCode read automatically.
+Open the clone in either and say:
+
+```
+set this up for me
+```
+
+It installs, writes a config pointing at your repos, and tells you what will be
+empty until you use it. Everything it writes is gitignored.
+
+### Or by hand
+
 **Requires:** Node.js 22+ (the OpenCode collector uses the built-in
 `node:sqlite`), and Claude Code and/or OpenCode installed.
 

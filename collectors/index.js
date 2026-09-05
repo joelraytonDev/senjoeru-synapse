@@ -389,7 +389,7 @@ async function readTasksBoardLenient() {
 }
 
 async function collectTasks() {
-  // Priority 1: C:\Users\joelr\.claude\tasks.json — live file updated by Claude agents
+  // Priority 1: the configured task board — the live file agents write to
   if (fs.existsSync(CLAUDE_TASKS_FILE)) {
     const source = await readTasksBoardLenient();
     if (source) {
@@ -463,7 +463,7 @@ async function collectTasks() {
   console.log(`[tasks] loaded=${tasks.length} from memory files (fallback)`);
 }
 
-// ─── agent collector (from C:\Users\joelr\.claude\agents\*.md definitions) ────
+// ─── agent collector (from <claudeDir>/agents/*.md definitions) ──────────────
 
 function relativeTime(ms) {
   const diff = Date.now() - ms;
