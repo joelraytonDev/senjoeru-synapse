@@ -157,9 +157,13 @@ function getConfig() {
   const agentRoles = raw.agentRoles && typeof raw.agentRoles === 'object' ? raw.agentRoles : {};
 
   // Projects group repos so the graph can say "these are my projects" rather
-  // than implying one of them owns everything. Optional: with none declared,
-  // derive a single project named after the workspace holding every repo,
-  // which is exactly the old single-root behaviour.
+  // than implying one of them owns everything.
+  //
+  // Declaring them is optional. With none configured they are derived from each
+  // repo's parent directory, because that is already how people organise work
+  // on disk — `~/work/acme/api` and `~/work/acme/web` are obviously one project.
+  // A new user therefore gets sensible grouping with no configuration, and it
+  // keeps up on its own as repos are added.
   const declaredProjects = Array.isArray(raw.projects) ? raw.projects : [];
   const projects = declaredProjects.length
     ? declaredProjects
@@ -170,12 +174,7 @@ function getConfig() {
           root: p.root || '',
           repositories: Array.isArray(p.repositories) ? p.repositories : [],
         }))
-    : [{
-        name: wsName,
-        emoji: w.emoji || '',
-        root: w.root || '',
-        repositories: repoPaths.map(basename),
-      }];
+    : deriveProjects(repoPaths, wsName, w.emoji || '');
 
   // A repo named by no project still has to appear somewhere, so it falls to
   // the first — silently dropping it from the graph would be worse than
@@ -221,6 +220,40 @@ function getConfig() {
   };
 }
 
+/**
+ * Group repos by the folder that contains them.
+ *
+ * Falls back to a single workspace-named project when there is nothing to group
+ * — no repos yet on a fresh install, or every repo sitting in one directory, in
+ * which case a tier of one adds nothing.
+ */
+function deriveProjects(repoPaths, wsName, wsEmoji) {
+  const byParent = new Map();
+  for (const p of repoPaths) {
+    const parent = path.dirname(p);
+    if (!byParent.has(parent)) byParent.set(parent, []);
+    byParent.get(parent).push(basename(p));
+  }
+
+  if (byParent.size < 2) {
+    return [{
+      name: wsName,
+      emoji: wsEmoji,
+      root: [...byParent.keys()][0] || '',
+      repositories: repoPaths.map(basename),
+    }];
+  }
+
+  return [...byParent.entries()]
+    .map(([root, repositories]) => ({
+      name: basename(root) || root,
+      emoji: '',
+      root,
+      repositories,
+    }))
+    .sort((a, b) => b.repositories.length - a.repositories.length);
+}
+
 /** Display name for an agent slug — config override wins, else derived. */
 function roleDisplayName(slug) {
   const cfg = getConfig();
@@ -237,4 +270,7 @@ function allRepoNames() {
   return [...set];
 }
 
-module.exports = { getConfig, slugify, basename, formatAgentName, roleDisplayName, allRepoNames, CONFIG_PATH };
+module.exports = {
+  getConfig, slugify, basename, formatAgentName, roleDisplayName, allRepoNames,
+  deriveProjects, CONFIG_PATH,
+};

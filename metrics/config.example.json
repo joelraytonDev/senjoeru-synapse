@@ -23,6 +23,16 @@
     "C:\\path\\to\\your\\workspace\\my-api",
     "C:\\path\\to\\your\\workspace\\my-web"
   ],
+  "_projects": "OPTIONAL. Groups repos in the Agent Network so no single project looks like the root. Leave this out entirely and projects are derived from each repo's parent folder, which is usually right — C:/work/acme/api and C:/work/acme/web become one 'acme' project. Declare it only to rename, reorder, add emoji, or group repos that do not share a folder. Repos you name in no project fall to the first one rather than vanishing.",
+  "projects": [
+    {
+      "name": "Acme",
+      "emoji": "🌸",
+      "root": "C:\\path\\to\\your\\workspace",
+      "repositories": ["my-api", "my-web"]
+    }
+  ],
+
   "repoAgents": {
     "my-api": ["backend-engineer"],
     "my-web": ["frontend-engineer"]
