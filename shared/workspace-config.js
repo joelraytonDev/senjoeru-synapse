@@ -47,6 +47,19 @@ function basename(p) {
   return String(p || '').replace(/[\\/]+$/, '').split(/[\\/]/).pop() || '';
 }
 
+/**
+ * Parent directory, for either separator.
+ *
+ * `path.dirname` only understands the host's separator, so a Windows path read
+ * on Linux — a config written on one machine, or a test running in CI — yields
+ * "." and every repo collapses into one group.
+ */
+function dirname(p) {
+  const parts = String(p || '').replace(/[\\/]+$/, '').split(/[\\/]/);
+  parts.pop();
+  return parts.join('/');
+}
+
 /** "ai-chatbot-engineer" → "AI Chatbot Engineer" (generic, acronym-aware). */
 function formatAgentName(slug) {
   return String(slug || '')
@@ -235,7 +248,7 @@ function getConfig() {
 function deriveProjects(repoPaths, wsName, wsEmoji) {
   const byParent = new Map();
   for (const p of repoPaths) {
-    const parent = path.dirname(p);
+    const parent = dirname(p);
     if (!byParent.has(parent)) byParent.set(parent, []);
     byParent.get(parent).push(basename(p));
   }

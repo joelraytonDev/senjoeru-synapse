@@ -27,6 +27,20 @@ test('repos are grouped by the folder that contains them', () => {
   assert.deepEqual(repos(projects, 'personal'), ['notes-app']);
 });
 
+test('windows paths group correctly on any platform', () => {
+  // path.dirname only understands the host separator, so this grouped into a
+  // single "." bucket on Linux while passing on Windows — the CI failure that
+  // a local-only run could never have caught.
+  const projects = deriveProjects([
+    'D:\\work\\acme\\api',
+    'D:\\work\\acme\\web',
+    'D:\\work\\side\\blog',
+  ], 'Workspace', '');
+
+  assert.deepEqual(names(projects).sort(), ['acme', 'side']);
+  assert.deepEqual(repos(projects, 'acme').sort(), ['api', 'web']);
+});
+
 test('the biggest project comes first', () => {
   const projects = deriveProjects([
     '/home/dev/solo/one',
