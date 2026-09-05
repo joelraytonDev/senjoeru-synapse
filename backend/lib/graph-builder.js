@@ -2,7 +2,8 @@
  * Agent-Network graph builder.
  *
  * Transforms the metrics JSON produced by the collector into a React Flow
- * graph: FlowerStorePH (root) -> Agents -> Repos.
+ * graph: Workspace (root) -> Projects -> Repos, with Agents edged to the repos
+ * they own.
  *
  * Two independent stages (kept separate so layout can be swapped later):
  *   buildGraph()        -> { nodes, edges }  — topology + data, NO positions
@@ -239,7 +240,7 @@ async function buildGraph(preloaded) {
     const presentOwners = owners.filter(o => agentIdByName[o]);
     // A repo is "working" only when an owning agent is ACTUALLY active in this
     // repo's directory — not merely working somewhere else. This stops e.g.
-    // Backend Engineer lighting up fsweb while it is really editing seller-page.
+    // one repo lighting up while its owning agent is really editing another.
     const repoWorking = presentOwners.some(o => cwdMatchesRepo(activeCwdByAgent[o], repo));
     const id = repoNodeId(repo);
 

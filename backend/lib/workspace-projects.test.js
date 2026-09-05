@@ -17,14 +17,14 @@ const repos = (projects, name) => projects.find((p) => p.name === name).reposito
 
 test('repos are grouped by the folder that contains them', () => {
   const projects = deriveProjects([
-    'D:\\FlowerStorePH\\fsweb',
-    'D:\\FlowerStorePH\\fs-llm-service',
-    'D:\\JOELRAYTON WORKS\\senjoeru-synapse',
+    'D:\\acme\\web-app',
+    'D:\\acme\\chat-service',
+    'D:\\personal\\notes-app',
   ], 'Workspace', '');
 
-  assert.deepEqual(names(projects).sort(), ['FlowerStorePH', 'JOELRAYTON WORKS']);
-  assert.deepEqual(repos(projects, 'FlowerStorePH').sort(), ['fs-llm-service', 'fsweb']);
-  assert.deepEqual(repos(projects, 'JOELRAYTON WORKS'), ['senjoeru-synapse']);
+  assert.deepEqual(names(projects).sort(), ['acme', 'personal']);
+  assert.deepEqual(repos(projects, 'acme').sort(), ['chat-service', 'web-app']);
+  assert.deepEqual(repos(projects, 'personal'), ['notes-app']);
 });
 
 test('the biggest project comes first', () => {

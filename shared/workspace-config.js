@@ -20,7 +20,12 @@ const os = require('os');
 const path = require('path');
 
 const REPO_ROOT = path.join(__dirname, '..');
-const CONFIG_PATH = path.join(REPO_ROOT, 'metrics', 'config.json');
+
+// SYNAPSE_CONFIG points the whole app at a different config file. Needed so
+// tests can supply a fixture instead of reading whatever happens to be on the
+// developer's machine — two graph tests used to pass only because the author's
+// config named the repos they asserted on.
+const CONFIG_PATH = process.env.SYNAPSE_CONFIG || path.join(REPO_ROOT, 'metrics', 'config.json');
 
 // Pricing per MILLION tokens (config units); Claude Sonnet 4.6 defaults.
 const DEFAULT_PRICING = { modelLabel: 'Sonnet 4.6', input: 3.0, output: 15.0, cacheRead: 0.3, cacheWrite: 3.75 };

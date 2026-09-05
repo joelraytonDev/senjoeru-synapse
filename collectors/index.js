@@ -506,7 +506,7 @@ function inferProject(description) {
 const ACTIVE_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
 
 // Convert a CWD path to the Claude project directory name.
-// "d:\FlowerStorePH\fs-llm-service"  →  "d--FlowerStorePH-fs-llm-service"
+// "d:\work\my-api"  →  "d--work-my-api"
 function cwdToProjectDirName(cwd) {
   return cwd
     .replace(/^([a-zA-Z]):[\\\/]/, (_, letter) => letter + '--')
